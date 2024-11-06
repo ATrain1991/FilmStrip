@@ -1,0 +1,1 @@
+POSTER_OUTPUT_FOLDER = "movie_posters"

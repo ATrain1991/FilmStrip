@@ -1,0 +1,9 @@
+cpi
+numpy
+numerize
+opencv-python
+Pillow
+pydub
+PyQt6
+requests
+torch
