@@ -3,14 +3,16 @@ from venv import logger
 from PyQt6.QtWidgets import QApplication, QWidget
 import sys
 from PyQt6.QtCore import QTimer
-import Film_Strip
 from VideoManager import DEBUG
 from film_strip_generator import FilmStripWidget
-from Film_Strip import FilmStrip
+from Film_Strip import FilmStrip, Ui_Form
 from models import noDB_actor
 from single_actor_full import generate_actor_object
 from video_manager import VideoManager
 from pydub import AudioSegment
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPixmap
+from PyQt6 import QtWidgets
 
 ICON_DIR = "icons"
 fresh_T_meter_icon = os.path.join(ICON_DIR, "FreshTomato.png")
@@ -69,6 +71,50 @@ def get_actor_sub_images(actor:noDB_actor):
             logger.error(f"Error in get_actor_sub_images: {e}")
         return []
 
+def create_test_film_strips():
+    test_strips = []
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Debug prints
+    print(f"Current directory: {current_dir}")
+    film_strip_path = os.path.join(current_dir, "icons", "film_strip.png")
+    print(f"Film strip path: {film_strip_path}")
+    print(f"Film strip exists: {os.path.exists(film_strip_path)}")
+    
+    # Test loading the image directly
+    test_pixmap = QPixmap(film_strip_path)
+    if test_pixmap.isNull():
+        print("Failed to load film strip image directly!")
+    else:
+        print(f"Successfully loaded film strip: {test_pixmap.width()}x{test_pixmap.height()}")
+    
+    for i in range(6):
+        strip = FilmStrip(
+            poster_path=os.path.join(current_dir, "Will Smith", "Wild_Wild_West.jpg"),
+            tomato_icon_path=os.path.join(current_dir, "icons", "FreshTomato.png"),
+            popcorn_icon_path=os.path.join(current_dir, "icons", "FreshPopcorn(background).png"),
+            tomato_score="95",
+            popcorn_score="90",
+            year="2024",
+            box_office="$152M"
+        )
+        
+        # Test if the Film label exists and has a pixmap
+        if hasattr(strip.ui, 'Film'):
+            print(f"Film label exists for strip {i}")
+            if strip.ui.Film.pixmap():
+                print(f"Film label has pixmap: {strip.ui.Film.pixmap().width()}x{strip.ui.Film.pixmap().height()}")
+            else:
+                print("Film label has no pixmap!")
+        else:
+            print("No Film label found!")
+        
+        strip.setMinimumSize(1080, 1920)
+        test_strips.append(strip)
+        print(f"Test strip {i+1} created successfully")
+    
+    return test_strips
+
 def create_actor_posters(actor:noDB_actor):
     """Create poster components for an actor's movies"""
     best_critic_movie = actor.get_critics_best_movie("tomatometer")
@@ -89,8 +135,8 @@ def create_actor_posters(actor:noDB_actor):
     for movie, soundbite in poster_movies:
         try:
             main_img = os.path.join(actor.name, f"{movie.title.replace(' ', '_').replace('/', '_').replace('?', '').replace(':', '')}.jpg")
-            
-            # Create FilmStrip instance
+            # strip = FilmStrip.UiForm()
+            # Create FilmStrip instance without showing it
             strip = FilmStrip(
                 poster_path=main_img,
                 tomato_score=movie.tomatometer,
@@ -98,7 +144,6 @@ def create_actor_posters(actor:noDB_actor):
                 year=movie.year,
                 box_office=movie.NumerizeBoxOffice()
             )
-            strip.show()
             film_strip_components.append(strip)
             
         except Exception as e:
@@ -109,51 +154,28 @@ def create_actor_posters(actor:noDB_actor):
     return film_strip_components
 
 
-
-
-class FilmFrameWidget(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.ui = FilmStrip()
-        self.ui.setupUi(self)
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     
-    # Create film strip with 6 frames using our custom frame widget
-    def record_scroll(widget, duration_ms):
-        """Record scrolling through widget for specified duration"""
-        from PyQt6.QtCore import QTimer
-        from PyQt6.QtTest import QTest
-        
-        # Calculate scroll increment based on duration
-        scrollbar = widget.findChild(QWidget).verticalScrollBar()
-        scroll_range = scrollbar.maximum()
-        steps = duration_ms // 16  # 60fps
-        increment = int(scroll_range / steps)  # Convert to integer
-        
-        # Scroll and record each frame
-        for _ in range(steps):
-            current = scrollbar.value()
-            scrollbar.setValue(current + increment)
-            QTest.qWait(16)  # Wait one frame
-            
-    # Define recording function
-    def start_recording():
-        record_scroll(film_strip, 5000)  # 5000ms = 5 seconds of scrolling
-    
-    # Create film strip widget
-    actor = generate_actor_object("Will Smith", 2, 10)
-    film_strip_components = create_actor_posters(actor)
+    # Create film strip components
+    film_strip_components = create_test_film_strips()
+    print(f"Created {len(film_strip_components)} components")
     
     # Create the film strip widget
-    film_strip = FilmStripWidget(width=1080, height=1920)
+    film_strip = FilmStripWidget(width=1080, height=1920)  # Match the height from FilmStrip class
+    film_strip.components = film_strip_components  # Store reference to prevent garbage collection
     
-    # Add the film strips directly to the widget
-    for component in film_strip_components:
-        film_strip.layout().addWidget(component)
+    # Update the frames with our components
+    film_strip.update_frames(film_strip_components)
+    print("Updated frames")
     
-    # Start recording after 1 second delay
-    QTimer.singleShot(1000, start_recording)
+    film_strip.setMinimumSize(400, 400)
+    film_strip.setWindowFlags(film_strip.windowFlags() | Qt.WindowType.WindowMaximizeButtonHint)
+    film_strip.setStyleSheet("background-color: black;")
+    film_strip.resize(1080, min(1920, QApplication.primaryScreen().availableGeometry().height()))
+    
+    print("Showing window...")
     film_strip.show()
+    print("Window shown")
+    
     sys.exit(app.exec())

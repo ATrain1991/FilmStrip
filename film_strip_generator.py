@@ -38,13 +38,13 @@ class FilmStripWidget(QWidget):
         for i, frame in enumerate(frames):
             frame.setFixedSize(QSize(self.frame_width, self.frame_height))
             layout.addWidget(frame)
-            # Add black separator line between frames
-            if i < self.num_frames - 1:  # Don't add line after last frame
-                separator = QWidget()
-                separator.setFixedSize(QSize(self.frame_width, 2))  # 2 pixel high line
-                separator.setStyleSheet("background-color: black;")
-                layout.addWidget(separator)
-            self.frames.append(frame)
+            # Add separator between frames except for last one
+            # if i < len(frames) - 1:
+                # separator = QWidget()
+                # separator.setFixedSize(QSize(self.frame_width, 2))  # 2 pixel high line
+                # separator.setStyleSheet("background-color: black;")
+                # layout.addWidget(separator)
+            # self.frames.append(frame)
             
         container.setLayout(layout)
         scroll.setWidget(container)
@@ -117,13 +117,18 @@ class FilmStripWidget(QWidget):
 
     def update_frames(self, new_frames: list[QWidget]):
         """Update the filmstrip with new frame widgets"""
+        # Find the container widget (the one inside the scroll area)
+        scroll_area = self.findChild(QScrollArea)
+        container = scroll_area.widget()
+        layout = container.layout()
+        
         # Clear existing frames
-        for frame in self.frames:
-            frame.deleteLater()
-        self.frames.clear()
+        while layout.count():
+            item = layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
         
         # Add new frames
-        layout = self.findChild(QWidget).layout()
         for i, frame in enumerate(new_frames):
             frame.setFixedSize(QSize(self.frame_width, self.frame_height))
             layout.addWidget(frame)

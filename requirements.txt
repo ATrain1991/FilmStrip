@@ -7,3 +7,5 @@ pydub
 PyQt6
 requests
 torch
+sqlalchemy
+beautifulsoup4

@@ -7,6 +7,7 @@
 
 
 from PyQt6 import QtCore, QtGui, QtWidgets
+import os
 
 class FilmStrip(QtWidgets.QWidget):
     def __init__(self, poster_path="", tomato_icon_path="icons/FreshTomato.png", 
@@ -16,10 +17,16 @@ class FilmStrip(QtWidgets.QWidget):
         Constructor for Film_Strip UI
         """
         super().__init__()
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setStyleSheet("background: transparent;")
+        
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         
-        # Update images with provided paths
+        # Layer 1: Film strip at the very back
+        self.ui.Film.lower()
+        
+        # Layer 2: Poster and icons
         self.ui.Poster.setPixmap(QtGui.QPixmap(poster_path))
         self.ui.TomatoMeterIcon.setPixmap(QtGui.QPixmap(tomato_icon_path))
         self.ui.PopcornMeterIcon.setPixmap(QtGui.QPixmap(popcorn_icon_path))
@@ -30,17 +37,66 @@ class FilmStrip(QtWidgets.QWidget):
         self.ui.Year.setText(str(year))
         self.ui.Box_Office.setText(str(box_office))
 
-
+        # Set z-order in three distinct layers
+        # Layer 1: Film strip (bottom)
+        self.ui.Film.lower()
+        
+        # Layer 2: Poster and icons
+        self.ui.Poster.stackUnder(self.ui.TomatoMeterScore)  # Put under text layer
+        self.ui.TomatoMeterIcon.stackUnder(self.ui.TomatoMeterScore)
+        self.ui.PopcornMeterIcon.stackUnder(self.ui.PopcornMeterScore)
+        
+        # Layer 3: Text (top)
+        self.ui.TomatoMeterScore.raise_()
+        self.ui.PopcornMeterScore.raise_()
+        self.ui.Year.raise_()
+        self.ui.Box_Office.raise_()
 
 class Ui_Form(object):
+    def __init__(self):
+        """
+        Initialize default values for UI elements
+        """
+        self.Film = None
+        self.Poster = None 
+        self.TomatoMeterScore = None
+        self.PopcornMeterScore = None
+        self.TomatoMeterIcon = None
+        self.PopcornMeterIcon = None
+        self.Box_Office = None
+        self.Year = None
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(1080, 1920)
+        
+        # Create Film (background) first so it's at the bottom
         self.Film = QtWidgets.QLabel(parent=Form)
         self.Film.setGeometry(QtCore.QRect(0, 0, 1080, 1920))
         self.Film.setText("")
-        self.Film.setPixmap(QtGui.QPixmap("icons/film strip2.png"))
+        self.Film.setPixmap(QtGui.QPixmap("icons/film strip.png"))
         self.Film.setObjectName("Film")
+        self.Film.lower()  # Ensure it's at the bottom
+        
+        # Create icons next
+        self.TomatoMeterIcon = QtWidgets.QLabel(parent=Form)
+        self.TomatoMeterIcon.setGeometry(QtCore.QRect(156, 1510, 300, 300))
+        self.TomatoMeterIcon.setBaseSize(QtCore.QSize(300, 300))
+        self.TomatoMeterIcon.setText("")
+        self.TomatoMeterIcon.setPixmap(QtGui.QPixmap("icons/FreshTomato.png"))
+        self.TomatoMeterIcon.setScaledContents(True)
+        self.TomatoMeterIcon.setObjectName("TomatoMeterIcon")
+        self.TomatoMeterIcon.stackUnder(self.Film)  # Put under the film strip
+
+        self.PopcornMeterIcon = QtWidgets.QLabel(parent=Form)
+        self.PopcornMeterIcon.setGeometry(QtCore.QRect(626, 1510, 300, 300))
+        self.PopcornMeterIcon.setBaseSize(QtCore.QSize(300, 300))
+        self.PopcornMeterIcon.setText("")
+        self.PopcornMeterIcon.setPixmap(QtGui.QPixmap("icons/FreshPopcorn(background).png"))
+        self.PopcornMeterIcon.setScaledContents(True)
+        self.PopcornMeterIcon.setObjectName("PopcornMeterIcon")
+        self.PopcornMeterIcon.stackUnder(self.Film)  # Put under the film strip
+        
+        # Create text labels last so they're on top
         self.Poster = QtWidgets.QLabel(parent=Form)
         self.Poster.setGeometry(QtCore.QRect(156, 144, 770, 1365))
         self.Poster.setText("")
@@ -52,7 +108,7 @@ class Ui_Form(object):
         font.setFamily("Rozha One")
         font.setPointSize(125)
         self.TomatoMeterScore.setFont(font)
-        self.TomatoMeterScore.setStyleSheet("color: white;")
+        self.TomatoMeterScore.setStyleSheet("color: white; background: transparent;")
         self.TomatoMeterScore.setObjectName("TomatoMeterScore")
         self.PopcornMeterScore = QtWidgets.QLabel(parent=Form)
         self.PopcornMeterScore.setGeometry(QtCore.QRect(670, 1790, 341, 111))
@@ -60,29 +116,15 @@ class Ui_Form(object):
         font.setFamily("Rozha One")
         font.setPointSize(125)
         self.PopcornMeterScore.setFont(font)
-        self.PopcornMeterScore.setStyleSheet("color: white;")
+        self.PopcornMeterScore.setStyleSheet("color: white; background: transparent;")
         self.PopcornMeterScore.setObjectName("PopcornMeterScore")
-        self.TomatoMeterIcon = QtWidgets.QLabel(parent=Form)
-        self.TomatoMeterIcon.setGeometry(QtCore.QRect(156, 1510, 300, 300))
-        self.TomatoMeterIcon.setBaseSize(QtCore.QSize(300, 300))
-        self.TomatoMeterIcon.setText("")
-        self.TomatoMeterIcon.setPixmap(QtGui.QPixmap("icons/FreshTomato.png"))
-        self.TomatoMeterIcon.setScaledContents(True)
-        self.TomatoMeterIcon.setObjectName("TomatoMeterIcon")
-        self.PopcornMeterIcon = QtWidgets.QLabel(parent=Form)
-        self.PopcornMeterIcon.setGeometry(QtCore.QRect(626, 1510, 300, 300))
-        self.PopcornMeterIcon.setBaseSize(QtCore.QSize(300, 300))
-        self.PopcornMeterIcon.setText("")
-        self.PopcornMeterIcon.setPixmap(QtGui.QPixmap("icons/FreshPopcorn(background).png"))
-        self.PopcornMeterIcon.setScaledContents(True)
-        self.PopcornMeterIcon.setObjectName("PopcornMeterIcon")
         self.Box_Office = QtWidgets.QLabel(parent=Form)
         self.Box_Office.setGeometry(QtCore.QRect(696, 32, 211, 91))
         font = QtGui.QFont()
         font.setFamily("Rozha One")
         font.setPointSize(45)
         self.Box_Office.setFont(font)
-        self.Box_Office.setStyleSheet("color: gold;")
+        self.Box_Office.setStyleSheet("color: gold; background: transparent;")
         self.Box_Office.setObjectName("Box_Office")
         self.Year = QtWidgets.QLabel(parent=Form)
         self.Year.setGeometry(QtCore.QRect(170, 30, 211, 91))
@@ -90,9 +132,13 @@ class Ui_Form(object):
         font.setFamily("Rozha One")
         font.setPointSize(45)
         self.Year.setFont(font)
-        self.Year.setStyleSheet("color: b;\n"
-"text-stroke: 2px black;")
+        self.Year.setStyleSheet("color: white; background: transparent;")
         self.Year.setObjectName("Year")
+
+        # Final z-order adjustment
+        self.Film.lower()  # Background at the very bottom
+        self.TomatoMeterIcon.stackUnder(self.Film)
+        self.PopcornMeterIcon.stackUnder(self.Film)
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
