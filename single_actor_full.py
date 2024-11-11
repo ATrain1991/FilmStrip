@@ -1,16 +1,11 @@
-import base64
-import csv
 from datetime import datetime
 import os  
 from numerize import numerize
 import cpi
-from torch import ge
 from HelperMethods import get_float_from_box_office
-import csv_exporter
-from databaseManager import DatabaseManager
 import image_resize
 import omdb_api
-from models import noDB_actor, noDB_movie
+from models import noDB_actor, noDB_movie, Meter,Movie
 
 
 def inflation_safe_year(year):
@@ -89,49 +84,3 @@ def download_posters(actor,poster_movies= None):
         poster_movies = actor.movies
     omdb_api.download_movie_posters(Master_api_key, poster_movies, actor.name)
     image_resize.resize_root_poster_folder(actor.name, actor.name)
-
-def ExportActor(actor_name,oscar_wins,oscar_nominations):
-    actor = generate_actor_object(actor_name,oscar_wins,oscar_nominations)
-    # actor.movies = movies
-    # Create folder for actor if it doesn't exist
-    os.makedirs(actor.name, exist_ok=True)
-    # Export CSV to the actor's folder
-    csv_exporter.noDB_export_actor_speedrun(actor, os.path.join(actor.name, f"{actor.name} output.csv"))
-    # Read the CSV file to get movie titles that need posters
-    with open(os.path.join(actor.name, f"{actor.name} output.csv"), 'r') as csv_file:
-        csv_reader = csv.DictReader(csv_file)
-        row = next(csv_reader)  # Get the first (and only) row
-        
-        # Get movie titles that need posters
-        poster_movies = [
-            row['Best Tmeter Title'],
-            row['Best Box Office Title'], 
-            row['Best Pmeter Title'],
-            row['Worst Tmeter Title'],
-            row['Worst Pmeter Title']
-        ]
-        
-        # Remove any empty strings or duplicates
-        poster_movies = list(set(filter(None, poster_movies)))
-    
-    download_posters(actor,poster_movies)
-    
-    print(f"Actor: {actor.name}")
-    print(f"Age: {actor.age}")
-    print(f"Birthdate: {actor.birthdate}")
-    print(f"Number of movies: {len(actor.movies)}")
-    print(f"Critics Best Movie: {actor.get_critics_best_movie('tomatometer').title}")
-    print(f"Audience Best Movie: {actor.get_audience_best_movie('popcornmeter').title}")
-    print(f"Highest Grossing Movie: {actor.get_highest_grossing_movie().title}")
-    print(f"Lowest Tomatometer Movie: {actor.get_lowest_tomatometer_movie().title}")
-    print(f"Lowest Popcornmeter Movie: {actor.get_lowest_popcornmeter_movie().title}")
-    print(f"Total Box Office: {numerize.numerize(actor.get_total_box_office())}")
-    print(f"Average Tomatometer: {actor.get_average_tomatometer()}")
-    print(f"Average Popcornmeter: {actor.get_average_popcornmeter()}")
-
-if __name__ == "__main__":
-    image_resize.create_side_by_side_image("Tom Hardy", ["Tom Hardy/Tom Hardy_1.jpg", "Tom Hardy/Tom Hardy_2.jpg"])
-    # ExportActor("Leonardo DiCaprio", 1, 6)
-    # ExportActor("Ryan Reynolds", 0, 0)
-    # ExportActor("Dwayne Johnson", 0, 0)
-    # ExportActor("Meryl Streep", 3, 21)

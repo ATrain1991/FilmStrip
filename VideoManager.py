@@ -17,6 +17,61 @@ class VideoManager:
         self.capture_timer = None
 
     @staticmethod
+    def create_scrolling_video2(image_path, output_path, duration=10):
+        """Create a video scrolling through a tall image over specified duration
+        Formatted for YouTube Shorts (1080x1920 vertical video)
+        """
+        image_path = image_path.replace(":", "") 
+        image_path = os.path.normpath(image_path)
+        # Read the input image
+        image = cv2.imread(image_path)
+        if image is None:
+            logger.error(f"Failed to load image: {image_path}")
+            return
+
+        # Get image dimensions
+        img_height, img_width = image.shape[:2]
+
+        # YouTube Shorts dimensions
+        shorts_width = 1080
+        shorts_height = 1920
+
+        # Resize image width to match Shorts width while maintaining aspect ratio
+        scale = shorts_width / img_width
+        new_height = int(img_height * scale)
+        image = cv2.resize(image, (shorts_width, new_height))
+
+        # Setup video writer
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out = cv2.VideoWriter(output_path, fourcc, 60, (shorts_width, shorts_height))
+
+        # Calculate scroll speed (pixels per frame)
+        total_frames = duration * 60  # 60 fps
+        scroll_speed = (new_height - shorts_height) / total_frames
+
+        # Create scrolling effect
+        for frame_num in range(int(total_frames)):
+            # Calculate current scroll position
+            scroll_pos = int(frame_num * scroll_speed)
+            
+            # Extract current window view
+            window = image[scroll_pos:scroll_pos + shorts_height, 0:shorts_width]
+            
+            # Handle case where window is smaller than shorts height at end of scroll
+            if window.shape[0] < shorts_height:
+                # Create black frame
+                frame = np.zeros((shorts_height, shorts_width, 3), dtype=np.uint8)
+                # Place window at top
+                frame[0:window.shape[0], 0:shorts_width] = window
+            else:
+                frame = window
+
+            out.write(frame)
+
+        out.release()
+        pass
+    
+    @staticmethod
     def process_video(actor_name, duration_seconds=10):
         """Process and move recorded video in YouTube Shorts format (9:16, 1080x1920, 60fps)"""
         try:
