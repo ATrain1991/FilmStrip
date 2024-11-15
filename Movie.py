@@ -25,7 +25,7 @@ class Movie:
             x=int(os.environ.get('BOX_OFFICE_X', 0)),
             y=int(os.environ.get('BOX_OFFICE_Y', 0)),
             scale=float(os.environ.get('BOX_OFFICE_SCALE', 1.0)),
-            color=eval(os.environ.get('TEXT_COLOR_BLACK')),
+            color=eval(os.environ.get('TEXT_COLOR_GREEN')),
             font=os.environ.get('FONT_PATH', cv2.FONT_HERSHEY_SIMPLEX),
             thickness=int(os.environ.get('BOX_OFFICE_THICKNESS', 2))
         )
