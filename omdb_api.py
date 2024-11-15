@@ -1,7 +1,30 @@
+from dotenv import load_dotenv
 import requests
 import os
-Master_api_key = '66f234c0'
-def download_movie_posters_omdb(api_key, movie_titles, output_folder):
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+import time
+load_dotenv(override=True)
+api_key = os.getenv('OMDB_API_KEY')
+
+def create_session():
+    session = requests.Session()
+    
+    # Configure retry strategy
+    retries = Retry(
+        total=5,  # number of retries
+        backoff_factor=1,  # wait 1, 2, 4, 8, 16 seconds between retries
+        status_forcelist=[500, 502, 503, 504, 404],
+        allowed_methods=["GET"]
+    )
+    
+    # Add retry adapter to session
+    session.mount('http://', HTTPAdapter(max_retries=retries))
+    session.mount('https://', HTTPAdapter(max_retries=retries))
+    
+    return session
+
+def download_movie_posters_omdb(movie_titles, output_folder):
     # Create the output folder if it doesn't exist
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
@@ -47,109 +70,128 @@ def download_movie_posters_omdb(api_key, movie_titles, output_folder):
             print(f"No poster found for: {title}")
             return False
 
-def get_genre_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Genre', None)
+def get_genre_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Genre', None)
 
-def get_director_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Director', None)    
+def get_director_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Director', None)    
   
-def get_title_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Title', None)
+def get_title_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Title', None)
 
-def get_year_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Year', None)
+def get_year_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Year', None)
 
-def get_rated_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Rated', None)
+def get_rated_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Rated', None)
 
-def get_releaseDate_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Released', None)
+def get_releaseDate_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Released', None)
 
-def get_runtime_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Runtime', None)
+def get_runtime_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Runtime', None)
 
-def get_writer_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Writer', None)
+def get_writer_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Writer', None)
 
-def get_actors_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Actors', None)
+def get_actors_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Actors', None)
 
-def get_plot_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Plot', None)
+def get_plot_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Plot', None)
 
-def get_language_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Language', None)
+def get_language_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Language', None)
 
-def get_country_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Country', None)
+def get_country_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Country', None)
 
-def get_awards_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Awards', None)
+def get_awards_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Awards', None)
 
-def get_poster_url_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Poster', None)
+def get_poster_url_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Poster', None)
 
-def get_ratings_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Ratings', None)
+def get_ratings_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Ratings', None)
 
-def get_metascore_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Metascore', None)
+def get_metascore_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Metascore', None)
 
-def get_imdb_rating_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('imdbRating', None)
+def get_imdb_rating_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('imdbRating', None)
 
-def get_imdb_votes_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('imdbVotes', None)
+def get_imdb_votes_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('imdbVotes', None)
 
-def get_imdb_id_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('imdbID', None)
+def get_imdb_id_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('imdbID', None)
 
-def get_type_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Type', None)
+def get_type_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Type', None)
 
-def get_dvd_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('DVD', None)
+def get_dvd_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('DVD', None)
 
-def get_box_office_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('BoxOffice', None)
+def get_box_office_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('BoxOffice', None)
 
-def get_production_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Production', None)
+def get_production_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Production', None)
 
-def get_website_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Website', None)
+def get_website_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Website', None)
 
-def get_movie_actors_from_omdb(api_key, movie_title):
-    return get_movie_data(api_key, movie_title).get('Actors', None)
+def get_movie_actors_from_omdb(movie_title):
+    return get_movie_data(movie_title).get('Actors', None)
 
 
-def get_movie_data(api_key, movie_title):
+def get_movie_data(title, year=None, max_retries=3):
     base_url = "http://www.omdbapi.com/"
+    api_key = os.environ.get('OMDB_API_KEY')
+    
+    if not api_key:
+        raise ValueError("OMDB_API_KEY not found in environment variables")
+    
     params = {
-        'apikey': Master_api_key,
-        't': movie_title,
-        'r': 'json'
+        'apikey': api_key,
+        't': title,
+        'type': 'movie'
     }
-    response = requests.get(base_url, params=params)
-    if response.status_code == 200:
-        data = response.json()
-        box_office = data.get('BoxOffice', None)
-        if box_office:
-            try:
-                # Remove '$' and ',' from the string and convert to float
-                data['BoxOffice'] = float(box_office.replace('$', '').replace(',', ''))                
-            except ValueError:
-                print(f"Error converting box office value '{box_office}' to float")
-                data['BoxOffice'] = -1
-        else:
-            data['BoxOffice'] = -1
-        return data
-    else:
-        print(f"Error fetching data: {response.status_code} - {response.text}")
-        return {}
+    
+    if year:
+        params['y'] = year
+        
+    session = create_session()
+    
+    for attempt in range(max_retries):
+        try:
+            response = session.get(base_url, params=params, timeout=10)
+            response.raise_for_status()  # Raise an error for bad status codes
+            
+            data = response.json()
+            if data.get('Response') == 'True':
+                return data
+            else:
+                print(f"No data found for movie: {title} ({year if year else 'any year'})")
+                return None
+                
+        except requests.exceptions.ConnectionError as e:
+            print(f"Connection error on attempt {attempt + 1}/{max_retries}: {str(e)}")
+            if attempt == max_retries - 1:
+                raise
+            time.sleep(2 ** attempt)  # Exponential backoff
+            
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed on attempt {attempt + 1}/{max_retries}: {str(e)}")
+            if attempt == max_retries - 1:
+                raise
+            time.sleep(2 ** attempt)
+            
+    return None
 
-def get_box_office_from_omdb(api_key, movie_title):
-    box_office = get_movie_data(api_key, movie_title).get('BoxOffice', None)
+def get_box_office_from_omdb(movie_title):
+    box_office = get_movie_data(movie_title).get('BoxOffice', None)
     if box_office:
         try:
             # Remove '$' and ',' from the string and convert to float
@@ -159,7 +201,7 @@ def get_box_office_from_omdb(api_key, movie_title):
             return -1
     return -1
 
-def download_movie_posters(api_key, movie_titles, output_folder):
+def download_movie_posters(movie_titles, output_folder):
     # Create the output folder if it doesn't exist
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)

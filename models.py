@@ -73,7 +73,7 @@ from enum import Enum
 import os
 import cv2
 
-from cv_helper_methods import overlay_images_and_text
+from HelperMethods import overlay_images_and_text
 from image_models import PlaceImage
 
 class PlaceImage:

@@ -1,6 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
+import HelperMethods
+from Movie import Movie
+import omdb_api
 
 def get_actor_url_soup(actor_name):
         formatted_name = actor_name.lower().replace(' ', '_').replace('.', '').replace("'", "").replace('-','_')
@@ -74,18 +77,24 @@ def scrape_actor_data(actor_name):
         year_elem = row.select_one('.celebrity-filmography__year')
         year = year_elem.text.strip() if year_elem else None
 
+        def get_positive_number(value):
+            try:
+                number = float(value)
+                return number if number >= 0 else None
+            except (ValueError, TypeError):
+                return None
+
         tomatometer_elem = row.select_one('[data-tomatometer]')
-        tomatometer = tomatometer_elem['data-tomatometer'] if tomatometer_elem and tomatometer_elem['data-tomatometer'] not in ["N/A", "", "-1", "-","No Score Yet"] else None
+        tomatometer = get_positive_number(tomatometer_elem['data-tomatometer']) if tomatometer_elem else None
 
         box_office_elem = row.select_one('.celebrity-filmography__box-office')
-        box_office = box_office_elem.text.strip() if box_office_elem else None
+        box_office = get_positive_number(box_office_elem.text.strip()) if box_office_elem else None
 
         audience_score_elem = row.select_one('[data-audiencescore]')
-        popcornmeter = audience_score_elem['data-audiencescore'] if audience_score_elem else None
+        popcornmeter = get_positive_number(audience_score_elem['data-audiencescore']) if audience_score_elem else None
 
         credit_elem = row.select_one('.celebrity-filmography__credits')
         credit = credit_elem.text.strip() if credit_elem else None
-        
         
         movies_data.append([
             movie_id,
@@ -97,5 +106,64 @@ def scrape_actor_data(actor_name):
             credit
         ])
         movie_id += 1
+
+    return movies_data
+
+def scrape_actor_data2(actor_name):
+    # Format the actor name for the URL
+    soup=get_actor_url_soup(actor_name)
+    if not soup:
+        return None
+#remove tv section
+    tv_section = soup.find('rt-text', string=lambda text: text and text.strip() == 'TV')
+    if tv_section:
+        # Remove everything after the TV section
+        for element in tv_section.find_all_next():
+            element.decompose()
+
+    # Scrape movies data
+    movies_data = []
+    for row in soup.select('tr[data-title]'):
+        title = row.select_one('.celebrity-filmography__title a')
+        title = title.text.strip() if title else None
+
+        year_elem = row.select_one('.celebrity-filmography__year')
+        year = year_elem.text.strip() if year_elem else None
+
+        def get_positive_number(value):
+            try:
+                number = float(value)
+                return number if number >= 0 else None
+            except (ValueError, TypeError):
+                return None
+
+        tomatometer_elem = row.select_one('[data-tomatometer]')
+        tomatometer = get_positive_number(tomatometer_elem['data-tomatometer']) if tomatometer_elem else 0
+
+        box_office_elem = row.select_one('.celebrity-filmography__box-office')
+        if box_office_elem:
+            box_office = box_office_elem.text.strip()
+            numeric_box_office = HelperMethods.get_float_from_box_office(box_office)
+            if numeric_box_office and numeric_box_office < 1000:
+                box_office = omdb_api.get_box_office_from_omdb(title)
+        else:
+            box_office = None
+
+        audience_score_elem = row.select_one('[data-audiencescore]')
+        popcornmeter = get_positive_number(audience_score_elem['data-audiencescore']) if audience_score_elem else 0
+
+        credit_elem = row.select_one('.celebrity-filmography__credits')
+        credit = credit_elem.text.strip() if credit_elem else None
+
+        # Get movie poster path
+        # cleaned_title = title.replace(':', '') if title else ''
+        # poster_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), actor_name, f"{cleaned_title}.jpg")
+        # if not os.path.exists(poster_path):
+        #     print(f"Warning: Could not find poster at {poster_path}")
+        #     poster_path = None
+
+        # Create Movie object
+        movie_obj = Movie(title, year, box_office, "", tomatometer, popcornmeter,credit)
+        movies_data.append(movie_obj)
 
     return movies_data
